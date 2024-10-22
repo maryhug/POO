@@ -75,12 +75,14 @@ public class LArmarComputador {
     public void modificarComputador(int wid, Scanner scanner) {
         boolean encontrado = false;
 
-        try (RandomAccessFile archivo = new RandomAccessFile(".\\Datos\\Datos.txt", "rw")) {
-            RandomAccessFile archivoTemporal = new RandomAccessFile(".\\Datos\\Datos_temp.txt", "rw");
-
+        try (RandomAccessFile archivo = new RandomAccessFile(".\\Datos\\Datos.txt", "rw");
+             RandomAccessFile archivoTemporal = new RandomAccessFile(".\\Datos\\Datos_temp.txt", "rw")) {
+            
             archivo.seek(0);
             while (archivo.getFilePointer() < archivo.length()) {
                 int id = archivo.readInt();
+                BChasis chasis = logicaChasis.leer(archivo);
+                BDiscoDuro discoDuro = logicaDiscoDuro.leer(archivo);
 
                 if (id == wid) {
                     encontrado = true;
@@ -91,20 +93,21 @@ public class LArmarComputador {
                     System.out.println("Modificando disco duro...");
                     BDiscoDuro nuevoDiscoDuro = logicaDiscoDuro.modificarDiscoDuro(scanner);
 
+                    // Escribir el ID y los nuevos datos en el archivo temporal
                     archivoTemporal.writeInt(id);
                     logicaChasis.insertar(archivoTemporal, nuevoChasis);
                     logicaDiscoDuro.insertar(archivoTemporal, nuevoDiscoDuro);
                 } else {
+                    // Si no coincide, escribe los datos originales en el archivo temporal
                     archivoTemporal.writeInt(id);
-                    logicaChasis.insertar(archivoTemporal, logicaChasis.leer(archivo));
-                    logicaDiscoDuro.insertar(archivoTemporal, logicaDiscoDuro.leer(archivo));
+                    logicaChasis.insertar(archivoTemporal, chasis);
+                    logicaDiscoDuro.insertar(archivoTemporal, discoDuro);
                 }
             }
 
-            archivo.close();
-            archivoTemporal.close();
-
             if (encontrado) {
+                archivo.close();
+                archivoTemporal.close();
                 new java.io.File(".\\Datos\\Datos.txt").delete();
                 new java.io.File(".\\Datos\\Datos_temp.txt").renameTo(new java.io.File(".\\Datos\\Datos.txt"));
                 System.out.println("Computador modificado correctamente.");
@@ -114,8 +117,12 @@ public class LArmarComputador {
             }
         } catch (IOException e) {
             System.out.println("Error al modificar los datos: " + e.getMessage());
+            e.printStackTrace(); // Imprime la pila de excepciones para más detalles
         }
     }
+
+
+
 
     public boolean eliminarComputador(int wid) {
         boolean eliminado = false;
