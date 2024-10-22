@@ -36,5 +36,4 @@ public class BDiscoDuro {
 		this.capacidad = capacidad;
 	}
 	
-
 }

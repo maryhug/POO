@@ -1,119 +1,102 @@
 package vistas;
 
 import java.util.Scanner;
-
 import bean.BArmarComputador;
-import logica.LArmarComputador;
-
 import bean.BChasis;
 import bean.BDiscoDuro;
+import logica.LArmarComputador;
 
 public class Inicio {
-
     public static void main(String[] args) {
-        LArmarComputador logica = new LArmarComputador();
         Scanner scanner = new Scanner(System.in);
-        int opcion;
+        LArmarComputador logicaArmarComputador = new LArmarComputador();
+        boolean salir = false;
 
-        do {
-            System.out.println("==== MENÚ ARMAR COMPUTADOR ====");
-            System.out.println("1. Insertar un nuevo computador");
+        while (!salir) {
+            System.out.println("----- Menú -----");
+            System.out.println("1. Insertar computador");
             System.out.println("2. Buscar computador por ID");
-            System.out.println("3. Listar computador por ID");
-            System.out.println("4. Modificar computador por ID");
-            System.out.println("5. Eliminar computador por ID");
+            System.out.println("3. Listar todos los computadores");
+            System.out.println("4. Modificar computador");
+            System.out.println("5. Eliminar computador");
             System.out.println("6. Salir");
-            System.out.print("Seleccione una opción: ");
-            opcion = scanner.nextInt();
-            scanner.nextLine();
+            System.out.print("Elija una opción: ");
+            int opcion = scanner.nextInt();
 
             switch (opcion) {
-            case 1:
-                insertarComputador(scanner, logica);
-                break;
-            case 2:
-                buscarComputador(scanner, logica);
-                break;
-            case 3:
-                logica.listarRegistros();
-                break;
-            case 4:
-            	logica.modificarComputador(scanner, logica);
-                break;
-            case 5:
-                System.out.print("Ingrese el ID del computador a eliminar: ");
-                int idEliminar = scanner.nextInt();
-                logica.eliminarComputador(idEliminar);
-                break;
-            case 6:
-                System.out.println("Saliendo...");
-                break;
-            default:
-                System.out.println("Opción inválida, intente de nuevo.");
+                case 1:
+                    BArmarComputador nuevoComputador = new BArmarComputador();
+                    nuevoComputador.setIdArmarComputardor(generarId(scanner));
+                    
+                    System.out.println("Insertar datos del chasis:");
+                    BChasis nuevoChasis = new BChasis();
+                    System.out.print("Largo de la placa: ");
+                    nuevoChasis.setLargoPlaca(scanner.nextInt());
+                    System.out.print("Ancho de la placa: ");
+                    nuevoChasis.setAnchoPlaca(scanner.nextInt());
+                    System.out.print("Número de ranuras: ");
+                    nuevoChasis.setRanuras(scanner.nextInt());
+                    System.out.print("Administra cables (true/false): ");
+                    nuevoChasis.setAdminCables(scanner.nextBoolean());
+                    System.out.print("Ancho del chasis: ");
+                    nuevoChasis.setAncho(scanner.nextInt());
+                    System.out.print("Alto del chasis: ");
+                    nuevoChasis.setAlto(scanner.nextInt());
+                    System.out.print("Profundidad del chasis: ");
+                    nuevoChasis.setProfundidad(scanner.nextInt());
+
+                    System.out.println("Insertar datos del disco duro:");
+                    BDiscoDuro nuevoDiscoDuro = new BDiscoDuro();
+                    System.out.print("Tipo de disco (Magnetico / SSD): ");
+                    nuevoDiscoDuro.setTipoDisco(scanner.next());
+                    System.out.print("Interfaz (IDE/SATA/SCSI/SAS/SATA Express): ");
+                    nuevoDiscoDuro.setInterfaz(scanner.next());
+                    System.out.print("Capacidad (en GB): ");
+                    nuevoDiscoDuro.setCapacidad(scanner.nextInt());
+
+                    nuevoComputador.setChasis(nuevoChasis);
+                    nuevoComputador.setDd(nuevoDiscoDuro);
+
+                    logicaArmarComputador.insertar(nuevoComputador);
+                    break;
+
+                case 2:
+                    System.out.print("Ingrese el ID del computador a buscar: ");
+                    int idBuscar = scanner.nextInt();
+                    String resultado = logicaArmarComputador.EncontrarRegistroIdentificacion(idBuscar);
+                    System.out.println(resultado);
+                    break;
+
+                case 3:
+                    logicaArmarComputador.listarRegistros();
+                    break;
+
+                case 4:
+                    System.out.print("Ingrese el ID del computador a modificar: ");
+                    int idModificar = scanner.nextInt();
+                    logicaArmarComputador.modificarComputador(idModificar, scanner);
+                    break;
+
+                case 5:
+                    System.out.print("Ingrese el ID del computador a eliminar: ");
+                    int idEliminar = scanner.nextInt();
+                    logicaArmarComputador.eliminarComputador(idEliminar);
+                    break;
+                case 6:
+                    salir = true;
+                    break;
+
+                default:
+                    System.out.println("Opción no válida. Intente nuevamente.");
+                    break;
             }
-        } while (opcion != 6);
+        }
 
         scanner.close();
     }
 
-    private static void insertarComputador(Scanner scanner, LArmarComputador logica) {
-        System.out.println("==== Insertar un nuevo computador ====");
-
+    private static int generarId(Scanner scanner) {
         System.out.print("Ingrese el ID del computador: ");
-        int idComputador = scanner.nextInt();
-        scanner.nextLine();
-
-        System.out.print("Ingrese el largo de la placa del chasis: ");
-        int largoPlaca = scanner.nextInt();
-        System.out.print("Ingrese el ancho de la placa del chasis: ");
-        int anchoPlaca = scanner.nextInt();
-        System.out.print("Ingrese el número de ranuras: ");
-        int ranuras = scanner.nextInt();
-        System.out.print("¿Administra cables? (true/false): ");
-        boolean adminCables = scanner.nextBoolean();
-        System.out.print("Ingrese el ancho del chasis: ");
-        int anchoChasis = scanner.nextInt();
-        System.out.print("Ingrese el alto del chasis: ");
-        int altoChasis = scanner.nextInt();
-        System.out.print("Ingrese la profundidad del chasis: ");
-        int profundidadChasis = scanner.nextInt();
-        scanner.nextLine();
-
-        BChasis chasis = new BChasis();
-        chasis.setLargoPlaca(largoPlaca);
-        chasis.setAnchoPlaca(anchoPlaca);
-        chasis.setRanuras(ranuras);
-        chasis.setAdminCables(adminCables);
-        chasis.setAncho(anchoChasis);
-        chasis.setAlto(altoChasis);
-        chasis.setProfundidad(profundidadChasis);
-
-        System.out.print("Ingrese el tipo de disco duro (Magnetico/SSD): ");
-        String tipoDisco = scanner.nextLine();
-        System.out.print("Ingrese la interfaz del disco duro (IDE/SATA/SCSI/SAS): ");
-        String interfaz = scanner.nextLine();
-        System.out.print("Ingrese la capacidad del disco duro (en GB): ");
-        int capacidad = scanner.nextInt();
-        scanner.nextLine();
-
-        BDiscoDuro dd = new BDiscoDuro();
-        dd.setTipoDisco(tipoDisco);
-        dd.setInterfaz(interfaz);
-        dd.setCapacidad(capacidad);
-
-        BArmarComputador computador = new BArmarComputador(chasis, dd, idComputador);
-
-        logica.insertar(computador);
-    }
-
-    private static void buscarComputador(Scanner scanner, LArmarComputador logica) {
-        System.out.println("==== Buscar computador por ID ====");
-
-        System.out.print("Ingrese el ID del computador: ");
-        int id = scanner.nextInt();
-
-        String resultado = logica.EncontrarRegistroIdentificacion(id);
-
-        System.out.println("Resultado de la búsqueda: " + resultado);
+        return scanner.nextInt();
     }
 }

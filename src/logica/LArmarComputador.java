@@ -1,6 +1,5 @@
 package logica;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Scanner;
@@ -11,227 +10,150 @@ import bean.BDiscoDuro;
 
 public class LArmarComputador {
 
-	/*
-	 * Insertar un nuevo computador 
-	 * Buscar computador por ID 
-	 * Listar computador por
-	 * ID Modificar computador por ID
-	 * Eliminar computador por ID")
-	 */
+    private LChasis logicaChasis = new LChasis();
+    private LDiscoDuro logicaDiscoDuro = new LDiscoDuro();
 
-	public void insertar(BArmarComputador bArmarComputador) {
-		try {
-			RandomAccessFile archivo = new RandomAccessFile(".\\Datos\\Datos.txt", "rw");
-			archivo.seek(archivo.length());
+    public void insertar(BArmarComputador bArmarComputador) {
+        try (RandomAccessFile archivo = new RandomAccessFile(".\\Datos\\Datos.txt", "rw")) {
+            archivo.seek(archivo.length());
 
-			archivo.writeInt(bArmarComputador.getIdArmarComputardor());
+            archivo.writeInt(bArmarComputador.getIdArmarComputardor());
 
-			archivo.writeInt(bArmarComputador.getChasis().getLargoPlaca());
-			archivo.writeInt(bArmarComputador.getChasis().getAnchoPlaca());
-			archivo.writeInt(bArmarComputador.getChasis().getRanuras());
-			archivo.writeBoolean(bArmarComputador.getChasis().isAdminCables());
-			archivo.writeInt(bArmarComputador.getChasis().getAncho());
-			archivo.writeInt(bArmarComputador.getChasis().getAlto());
-			archivo.writeInt(bArmarComputador.getChasis().getProfundidad());
+            logicaChasis.insertar(archivo, bArmarComputador.getChasis());
 
-			archivo.writeUTF(bArmarComputador.getDd().getTipoDisco());
-			archivo.writeUTF(bArmarComputador.getDd().getInterfaz());
-			archivo.writeInt(bArmarComputador.getDd().getCapacidad());
+            logicaDiscoDuro.insertar(archivo, bArmarComputador.getDd());
 
-			archivo.close();
-			System.out.println("Datos guardados correctamente en el archivo.");
+            System.out.println("Computador insertado correctamente.");
+        } catch (IOException e) {
+            System.out.println("Error al insertar los datos: " + e.getMessage());
+        }
+    }
 
-		} catch (IOException e) {
-			System.out.println("Error al guardar los datos: " + e.getMessage());
-		}
-	}
+    public String EncontrarRegistroIdentificacion(int wid) {
+        String retorno = "No se encontró el computador con ID: " + wid;
 
-	public String EncontrarRegistroIdentificacion(int wid) {
-		String retorno = "No se encontró el computador con ID: " + wid;
+        try (RandomAccessFile archivo = new RandomAccessFile(".\\Datos\\Datos.txt", "r")) {
+            archivo.seek(0);
 
-		try (RandomAccessFile archivo = new RandomAccessFile(".\\Datos\\Datos.txt", "r")) {
-			archivo.seek(0);
+            while (archivo.getFilePointer() < archivo.length()) {
+                int id = archivo.readInt();
 
-			while (archivo.getFilePointer() < archivo.length()) {
-				int id = archivo.readInt();
+                if (id == wid) {
+                    String chasisInfo = logicaChasis.buscar(archivo);
+                    String discoDuroInfo = logicaDiscoDuro.buscar(archivo);
 
-				if (id == wid) {
-					int largoPlaca = archivo.readInt();
-					int anchoPlaca = archivo.readInt();
-					int ranuras = archivo.readInt();
-					boolean adminCables = archivo.readBoolean();
-					int anchoChasis = archivo.readInt();
-					int altoChasis = archivo.readInt();
-					int profundidadChasis = archivo.readInt();
+                    retorno = "Computador con ID: " + id + "\n" + chasisInfo + "\n" + discoDuroInfo;
+                    break;
+                } else {
+                    logicaChasis.saltarRegistro(archivo);
+                    logicaDiscoDuro.saltarRegistro(archivo);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error al leer el archivo: " + e.getMessage());
+        }
 
-					String tipoDisco = archivo.readUTF();
-					String interfaz = archivo.readUTF();
-					int capacidad = archivo.readInt();
+        return retorno;
+    }
 
-					retorno = "Computador con ID: " + id + "\n" + "Chasis: [LargoPlaca: " + largoPlaca
-							+ ", AnchoPlaca: " + anchoPlaca + ", Ranuras: " + ranuras + ", AdminCables: " + adminCables
-							+ ", Ancho: " + anchoChasis + ", Alto: " + altoChasis + ", Profundidad: "
-							+ profundidadChasis + "]\n" + "Disco Duro: [TipoDisco: " + tipoDisco + ", Interfaz: "
-							+ interfaz + ", Capacidad: " + capacidad + " GB]";
-					break;
-				} else {
-					archivo.readInt();
-					archivo.readInt();
-					archivo.readInt();
-					archivo.readBoolean();
-					archivo.readInt();
-					archivo.readInt();
-					archivo.readInt();
-					archivo.readUTF();
-					archivo.readUTF();
-					archivo.readInt();
-				}
-			}
-		} catch (EOFException e) {
-			System.out.println("Se llegó al final del archivo inesperadamente.");
-		} catch (IOException e) {
-			System.out.println("Error al leer el archivo: " + e.getMessage());
-		}
+    public void listarRegistros() {
+        try (RandomAccessFile archivo = new RandomAccessFile(".\\Datos\\Datos.txt", "r")) {
+            archivo.seek(0);
 
-		return retorno;
-	}
+            while (archivo.getFilePointer() < archivo.length()) {
+                int id = archivo.readInt();
+                String chasisInfo = logicaChasis.buscar(archivo);
+                String discoDuroInfo = logicaDiscoDuro.buscar(archivo);
 
-	public void listarRegistros() {
-		String wcadena;
-		try (RandomAccessFile archivo = new RandomAccessFile(".\\Datos\\Datos.txt", "r")) {
-			archivo.seek(0);
-			while (archivo.getFilePointer() < archivo.length()) {
+                System.out.println("ID: " + id + "\n" + chasisInfo + "\n" + discoDuroInfo + "\n");
+            }
+        } catch (IOException e) {
+            System.out.println("Error al leer el archivo: " + e.getMessage());
+        }
+    }
 
-				int id = archivo.readInt();
-				wcadena = "ID: " + id + " ";
+    public void modificarComputador(int wid, Scanner scanner) {
+        boolean encontrado = false;
 
-				int largoPlaca = archivo.readInt();
-				int anchoPlaca = archivo.readInt();
-				int ranuras = archivo.readInt();
-				boolean adminCables = archivo.readBoolean();
-				int anchoChasis = archivo.readInt();
-				int altoChasis = archivo.readInt();
-				int profundidadChasis = archivo.readInt();
+        try (RandomAccessFile archivo = new RandomAccessFile(".\\Datos\\Datos.txt", "rw")) {
+            RandomAccessFile archivoTemporal = new RandomAccessFile(".\\Datos\\Datos_temp.txt", "rw");
 
-				String tipoDisco = archivo.readUTF();
-				String interfaz = archivo.readUTF();
-				int capacidad = archivo.readInt();
+            archivo.seek(0);
+            while (archivo.getFilePointer() < archivo.length()) {
+                int id = archivo.readInt();
 
-				wcadena += "Chasis: [LargoPlaca: " + largoPlaca + ", AnchoPlaca: " + anchoPlaca + ", Ranuras: "
-						+ ranuras + ", AdminCables: " + adminCables + ", Ancho: " + anchoChasis + ", Alto: "
-						+ altoChasis + ", Profundidad: " + profundidadChasis + "] ";
+                if (id == wid) {
+                    encontrado = true;
 
-				wcadena += "Disco Duro: [TipoDisco: " + tipoDisco + ", Interfaz: " + interfaz + ", Capacidad: "
-						+ capacidad + " GB]";
+                    System.out.println("Modificando chasis...");
+                    BChasis nuevoChasis = logicaChasis.modificarChasis(scanner);
 
-				System.out.println(wcadena);
-			}
-		} catch (EOFException e) {
-			System.out.println("Se llegó al final del archivo inesperadamente.");
-		} catch (IOException e) {
-			System.out.println("Error al leer el archivo: " + e.getMessage());
-		}
-	}
+                    System.out.println("Modificando disco duro...");
+                    BDiscoDuro nuevoDiscoDuro = logicaDiscoDuro.modificarDiscoDuro(scanner);
 
-	public void modificarComputador(Scanner scanner, LArmarComputador logica) {
-		System.out.print("Ingrese el ID del computador a modificar: ");
-		int id = scanner.nextInt();
-		scanner.nextLine();
+                    archivoTemporal.writeInt(id);
+                    logicaChasis.insertar(archivoTemporal, nuevoChasis);
+                    logicaDiscoDuro.insertar(archivoTemporal, nuevoDiscoDuro);
+                } else {
+                    archivoTemporal.writeInt(id);
+                    logicaChasis.insertar(archivoTemporal, logicaChasis.leer(archivo));
+                    logicaDiscoDuro.insertar(archivoTemporal, logicaDiscoDuro.leer(archivo));
+                }
+            }
 
-		System.out.print("Ingrese el nuevo largo de la placa del chasis: ");
-		int largoPlaca = scanner.nextInt();
-		System.out.print("Ingrese el nuevo ancho de la placa del chasis: ");
-		int anchoPlaca = scanner.nextInt();
-		System.out.print("Ingrese el nuevo número de ranuras: ");
-		int ranuras = scanner.nextInt();
-		System.out.print("¿Administra cables? (true/false): ");
-		boolean adminCables = scanner.nextBoolean();
-		System.out.print("Ingrese el nuevo ancho del chasis: ");
-		int anchoChasis = scanner.nextInt();
-		System.out.print("Ingrese el nuevo alto del chasis: ");
-		int altoChasis = scanner.nextInt();
-		System.out.print("Ingrese la nueva profundidad del chasis: ");
-		int profundidadChasis = scanner.nextInt();
-		scanner.nextLine();
+            archivo.close();
+            archivoTemporal.close();
 
-		BChasis nuevoChasis = new BChasis();
-		nuevoChasis.setLargoPlaca(largoPlaca);
-		nuevoChasis.setAnchoPlaca(anchoPlaca);
-		nuevoChasis.setRanuras(ranuras);
-		nuevoChasis.setAdminCables(adminCables);
-		nuevoChasis.setAncho(anchoChasis);
-		nuevoChasis.setAlto(altoChasis);
-		nuevoChasis.setProfundidad(profundidadChasis);
+            if (encontrado) {
+                new java.io.File(".\\Datos\\Datos.txt").delete();
+                new java.io.File(".\\Datos\\Datos_temp.txt").renameTo(new java.io.File(".\\Datos\\Datos.txt"));
+                System.out.println("Computador modificado correctamente.");
+            } else {
+                new java.io.File(".\\Datos\\Datos_temp.txt").delete();
+                System.out.println("No se encontró un computador con ID: " + wid);
+            }
+        } catch (IOException e) {
+            System.out.println("Error al modificar los datos: " + e.getMessage());
+        }
+    }
 
-		System.out.print("Ingrese el nuevo tipo de disco duro (Magnetico/SSD): ");
-		String tipoDisco = scanner.nextLine();
-		System.out.print("Ingrese la nueva interfaz del disco duro (IDE/SATA/SCSI/SAS): ");
-		String interfaz = scanner.nextLine();
-		System.out.print("Ingrese la nueva capacidad del disco duro (en GB): ");
-		int capacidad = scanner.nextInt();
-		scanner.nextLine();
+    public boolean eliminarComputador(int wid) {
+        boolean eliminado = false;
 
-		BDiscoDuro nuevoDd = new BDiscoDuro();
-		nuevoDd.setTipoDisco(tipoDisco);
-		nuevoDd.setInterfaz(interfaz);
-		nuevoDd.setCapacidad(capacidad);
-	}
+        try (RandomAccessFile archivo = new RandomAccessFile(".\\Datos\\Datos.txt", "r")) {
+            RandomAccessFile archivoTemporal = new RandomAccessFile(".\\Datos\\Datos_temp.txt", "rw");
 
-	public boolean eliminarComputador(int wid) {
-		boolean eliminado = false;
+            archivo.seek(0);
+            while (archivo.getFilePointer() < archivo.length()) {
+                int id = archivo.readInt();
 
-		try (RandomAccessFile archivo = new RandomAccessFile(".\\Datos\\Datos.txt", "r")) {
+                if (id != wid) {
+                    archivoTemporal.writeInt(id);
+                    logicaChasis.insertar(archivoTemporal, logicaChasis.leer(archivo));
+                    logicaDiscoDuro.insertar(archivoTemporal, logicaDiscoDuro.leer(archivo));
+                } else {
+                    eliminado = true;
+                    logicaChasis.saltarRegistro(archivo);
+                    logicaDiscoDuro.saltarRegistro(archivo);
+                }
+            }
 
-			RandomAccessFile archivoTemporal = new RandomAccessFile(".\\Datos\\Datos_temp.txt", "rw");
+            archivoTemporal.close();
+            archivo.close();
 
-			archivo.seek(0);
-			while (archivo.getFilePointer() < archivo.length()) {
-				int id = archivo.readInt();
+            new java.io.File(".\\Datos\\Datos.txt").delete();
+            new java.io.File(".\\Datos\\Datos_temp.txt").renameTo(new java.io.File(".\\Datos\\Datos.txt"));
 
-				if (id != wid) {
-					archivoTemporal.writeInt(id);
-					archivoTemporal.writeInt(archivo.readInt());
-					archivoTemporal.writeInt(archivo.readInt());
-					archivoTemporal.writeInt(archivo.readInt());
-					archivoTemporal.writeBoolean(archivo.readBoolean());
-					archivoTemporal.writeInt(archivo.readInt());
-					archivoTemporal.writeInt(archivo.readInt());
-					archivoTemporal.writeInt(archivo.readInt());
-					archivoTemporal.writeUTF(archivo.readUTF());
-					archivoTemporal.writeUTF(archivo.readUTF());
-					archivoTemporal.writeInt(archivo.readInt());
-				} else {
-					eliminado = true;
-					archivo.readInt();
-					archivo.readInt();
-					archivo.readInt();
-					archivo.readBoolean();
-					archivo.readInt();
-					archivo.readInt();
-					archivo.readInt();
-					archivo.readUTF();
-					archivo.readUTF();
-					archivo.readInt();
-				}
-			}
+            if (eliminado) {
+                System.out.println("Computador eliminado correctamente.");
+            } else {
+                System.out.println("No se encontró un computador con ID: " + wid);
+            }
 
-			archivoTemporal.close();
-			archivo.close();
+        } catch (IOException e) {
+            System.out.println("Error al eliminar el registro: " + e.getMessage());
+        }
 
-			new java.io.File(".\\Datos\\Datos.txt").delete();
-			new java.io.File(".\\Datos\\Datos_temp.txt").renameTo(new java.io.File(".\\Datos\\Datos.txt"));
-
-			if (eliminado) {
-				System.out.println("Registro eliminado con éxito.");
-			} else {
-				System.out.println("No se encontró un registro con ID: " + wid);
-			}
-
-		} catch (IOException e) {
-			System.out.println("Error al eliminar el registro: " + e.getMessage());
-		}
-
-		return eliminado;
-	}
-
+        return eliminado;
+    }
 }
